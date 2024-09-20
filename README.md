@@ -1,1 +1,1 @@
-Simple password generator with passwod manager abilities/
+Simple password generator with password manager abilities.

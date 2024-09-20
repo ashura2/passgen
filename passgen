@@ -6,7 +6,7 @@ INCLUDE_UPPERCASE=true
 INCLUDE_LOWERCASE=true
 INCLUDE_DIGITS=true
 INCLUDE_SPECIAL=true
-OUTPUT_FILE="/home/tom/Playground/passgen_passwords/passgen.txt"
+OUTPUT_FILE="/your/own/path/passgen.txt"
 
 # Функція для відображення допомоги
 show_help() {

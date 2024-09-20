@@ -1,0 +1,116 @@
+#!/bin/bash
+
+# Значення за замовчуванням
+PASSWORD_LENGTH=12
+INCLUDE_UPPERCASE=true
+INCLUDE_LOWERCASE=true
+INCLUDE_DIGITS=true
+INCLUDE_SPECIAL=true
+OUTPUT_FILE="/home/tom/Playground/passgen_passwords/passgen.txt"
+
+# Функція для відображення допомоги
+show_help() {
+    echo "Використання: $0 [-n NUM] [-s] [-d] [-l] [-h] [-S]"
+    echo ""
+    echo "Аргументи:"
+    echo "  -n NUM     Вказує довжину пароля (за замовчуванням: 12)"
+    echo "  -s         Виключає спеціальні символи"
+    echo "  -d         Виключає цифри"
+    echo "  -l         Виключає літери (великі і малі)"
+    echo "  -h         Показує цю довідку"
+    echo "  -S, --show Показує вміст файлу з збереженими паролями"
+}
+
+# Парсинг аргументів командного рядка
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -n)
+            PASSWORD_LENGTH="$2"
+            shift 2
+            ;;
+        -s)
+            INCLUDE_SPECIAL=false
+            shift
+            ;;
+        -d)
+            INCLUDE_DIGITS=false
+            shift
+            ;;
+        -l)
+            INCLUDE_UPPERCASE=false
+            INCLUDE_LOWERCASE=false
+            shift
+            ;;
+        -h)
+            show_help
+            exit 0
+            ;;
+        -S|--show)
+            cat "$OUTPUT_FILE"
+            exit 0
+            ;;
+        *)
+            echo "Невідомий аргумент: $1"
+            show_help
+            exit 1
+            ;;
+    esac
+done
+
+# Побудова набору символів для генерації пароля
+CHAR_SET=""
+if $INCLUDE_UPPERCASE; then CHAR_SET+="A-Z"; fi
+if $INCLUDE_LOWERCASE; then CHAR_SET+="a-z"; fi
+if $INCLUDE_DIGITS; then CHAR_SET+="0-9"; fi
+if $INCLUDE_SPECIAL; then CHAR_SET+="!@#$%^&*()_+="; fi
+
+# Перевірка, чи є хоча б один тип символів
+if [ -z "$CHAR_SET" ]; then
+    echo "Помилка: Необхідно включити хоча б один тип символів."
+    show_help
+    exit 1
+fi
+
+# Генерація пароля
+generate_password() {
+    tr -dc "$CHAR_SET" </dev/urandom | head -c $PASSWORD_LENGTH
+    echo
+}
+
+# Виведення згенерованого пароля
+password=$(generate_password)
+echo -e "\nВаш згенерований пароль: $password"
+
+# Змінні для збереження логіну та коментаря
+login=""
+comment=""
+
+# Пропозиція додати логін
+read -p "Чи не бажаєте додати login? (Y/N): " add_login
+if [[ "$add_login" =~ ^[Yy]$ ]]; then
+    read -p "Введіть login: " login
+fi
+
+# Пропозиція додати коментар
+read -p "Чи не бажаєте додати коментар? (Y/N): " add_comment
+if [[ "$add_comment" =~ ^[Yy]$ ]]; then
+    read -p "Введіть коментар: " comment
+fi
+
+# Отримання порядкового номера (кількість рядків + 1)
+if [ ! -f "$OUTPUT_FILE" ]; then
+    touch "$OUTPUT_FILE"
+    counter=1
+else
+    counter=$(($(wc -l < "$OUTPUT_FILE") + 1))
+fi
+
+# Запис у файл з табуляцією як роздільником
+echo -e "$counter\t$(date +"%Y-%m-%d %H:%M:%S")\t$password\t$login\t$comment" >> "$OUTPUT_FILE"
+
+# Виведення результату на екран
+echo -e "\nРезультат:"
+echo -e "login:\t$login"
+echo -e "password:\t$password"
+echo -e "comment:\t$comment"
+
